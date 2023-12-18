@@ -10,7 +10,7 @@ const dbPath = path.join(__dirname, "twitterClone.db");
 let db = null;
 const intializeDBandServer = async () => {
   try {
-    db = open({
+    db = await open({
       filename: dbPath,
       driver: sqlite3.Database,
     });
@@ -32,5 +32,25 @@ app.post("/register/", async (request, response) => {
   if (getUser !== undefined) {
     response.status(400);
     response.send("User already exists");
+  } else {
+    if (password.length < 6) {
+      response.status(400);
+      response.send("Password is too short");
+    } else {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const createUserQuery = `
+      INSERT INTO 
+        user (name,username, password,gender) 
+      VALUES 
+        (
+           '${name}',
+          '${username}', 
+          '${hashedPassword}', 
+          '${gender}'
+        )`;
+      await db.run(createUserQuery);
+      response.status(200);
+      response.send("User created successfully");
+    }
   }
 });
