@@ -54,3 +54,29 @@ app.post("/register/", async (request, response) => {
     }
   }
 });
+
+//post login request
+app.post("/login/", async (request, response) => {
+  const { username, password } = request.body;
+  console.log(username);
+  const getUserFromDbQuery = `select * from user where username='${username}'`;
+  const userFromDB = await db.get(getUserFromDbQuery);
+  console.log(userFromDB);
+  if (userFromDB === undefined) {
+    response.status(400);
+    response.send("Invalid user");
+  } else {
+    const isPasswordMatched = await bcrypt.compare(
+      password,
+      userFromDB.password
+    );
+    if (isPasswordMatched !== true) {
+      response.status(400);
+      response.send("Invalid password");
+    } else {
+      const payload = { username: username };
+      const jwtToken = jwt.sign(payload, "bhanu");
+      response.send({ jwtToken });
+    }
+  }
+});
