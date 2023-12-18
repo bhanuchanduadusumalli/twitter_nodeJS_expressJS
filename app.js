@@ -46,6 +46,7 @@ const authenticateToken = async (request, response, next) => {
         response.status(401);
         response.send("Invalid JWT Token");
       } else {
+        request.userName = payload.username;
         next();
       }
     });
@@ -119,4 +120,18 @@ app.get("/user/tweets/feed/", async (request, response) => {
   response.send(
     userTweetresult.map((UT) => covertUserTweetDBObjToResponseObj(UT))
   );
+});
+
+//get request
+app.get("/user/following/", async (request, response) => {
+  //   const { userName } = request.body;
+  const userName = "bhanu111";
+  const getUserQuery = `select user_id from user where username=${userName}`;
+  const getUserID = await db.get(getUserQuery);
+  const getFollowingNamesQuery = `select name 
+  from user join follower 
+  on user.user_id=follower.follower_id 
+  where user_id=${getUserID}`;
+  const names = await db.all(getFollowingNamesQuery);
+  console.log(names);
 });
