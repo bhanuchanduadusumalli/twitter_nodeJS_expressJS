@@ -23,6 +23,27 @@ const intializeDBandServer = async () => {
 };
 intializeDBandServer();
 
+const authenticateToken = async (request, response, next) => {
+  let jwtToken;
+  const authHeader = request.headers["authorization"];
+  if (authHeader !== undefined) {
+    jwtToken = authHeader.split(" ")[1];
+  }
+  if (authHeader === undefined) {
+    response.status(401);
+    response.send("Invalid JWT Token");
+  } else {
+    jwt.verify(jwtToken, "bhanu", (error, payload) => {
+      if (error) {
+        response.status(401);
+        response.send("Invalid JWT Token");
+      } else {
+        next();
+      }
+    });
+  }
+};
+
 //get request
 app.post("/register/", async (request, response) => {
   const { username, password, name, gender } = request.body;
