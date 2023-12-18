@@ -23,6 +23,14 @@ const intializeDBandServer = async () => {
 };
 intializeDBandServer();
 
+const covertUserTweetDBObjToResponseObj = (DbObj) => {
+  return {
+    username: DbObj.username,
+    tweet: DbObj.tweet,
+    dateTime: DbObj.date_time,
+  };
+};
+//middleware function
 const authenticateToken = async (request, response, next) => {
   let jwtToken;
   const authHeader = request.headers["authorization"];
@@ -100,4 +108,15 @@ app.post("/login/", async (request, response) => {
       response.send({ jwtToken });
     }
   }
+});
+
+//get request
+app.get("/user/tweets/feed/", async (request, response) => {
+  const getUserTweetQuery = `select username,tweet,date_time
+    from user natural join tweet`;
+  const userTweetresult = await db.all(getUserTweetQuery);
+  //console.log(userTweetresult);
+  response.send(
+    userTweetresult.map((UT) => covertUserTweetDBObjToResponseObj(UT))
+  );
 });
