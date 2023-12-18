@@ -46,7 +46,8 @@ const authenticateToken = async (request, response, next) => {
         response.status(401);
         response.send("Invalid JWT Token");
       } else {
-        request.userName = payload.username;
+        request.username = payload.username;
+        //console.log(request.username);
         next();
       }
     });
@@ -106,13 +107,14 @@ app.post("/login/", async (request, response) => {
     } else {
       const payload = { username: username };
       const jwtToken = jwt.sign(payload, "bhanu");
+      console.log(jwtToken);
       response.send({ jwtToken });
     }
   }
 });
 
 //get request
-app.get("/user/tweets/feed/", async (request, response) => {
+app.get("/user/tweets/feed/", authenticateToken, async (request, response) => {
   const getUserTweetQuery = `select username,tweet,date_time
     from user natural join tweet`;
   const userTweetresult = await db.all(getUserTweetQuery);
@@ -123,29 +125,40 @@ app.get("/user/tweets/feed/", async (request, response) => {
 });
 
 //get request
-app.get("/user/following/", async (request, response) => {
-  //   const { userName } = request.body;
-  const userName = "bhanu111";
-  const getUserQuery = `select user_id from user where username=${userName}`;
+app.get("/user/following/", authenticateToken, async (request, response) => {
+  // const request.username = request.body;
+  //console.log(request.username);
+  const userName = request.username;
+  const getUserQuery = `select user_id from user where username='${userName}'`;
   const getUserID = await db.get(getUserQuery);
-  const getFollowingNamesQuery = `select name 
+  console.log(getUserID);
+  //const getFollowingNamesQuery = `select * from user where user_id=${getUserID.user_id}`;
+  const getFollowingNamesQuery = `select following_user_id,name 
   from user join follower 
   on user.user_id=follower.follower_id 
-  where user_id=${getUserID}`;
+  group by user_id=${getUserID.user_id}`;
   const names = await db.all(getFollowingNamesQuery);
   console.log(names);
 });
 
 //get request
-app.get("/user/followers/", async (request, response) => {
+app.get("/user/followers/", authenticateToken, async (request, response) => {
   //   const { userName } = request.body;
-  const userName = "bhanu111";
-  const getUserQuery = `select user_id from user where username=${userName}`;
+  //const userName = "bhanu111";
+  const userName = request.username;
+  const getUserQuery = `select user_id from user where username='${userName}'`;
   const getUserID = await db.get(getUserQuery);
-  const getFollowingNamesQuery = `select name 
+
+  const getFollowingNamesQuery = `select name  
   from user join follower 
   on user.user_id=follower.follower_id 
-  where user_id=${getUserID}`;
+  where user_id
+  group by user_id=${getUserID.user_id}`;
   const names = await db.all(getFollowingNamesQuery);
-  console.log(names);
+  response.send(names);
+});
+
+//get request
+app.get("/tweets/:tweetId/", async (request, response) => {
+  const { tweetId } = request.params;
 });
