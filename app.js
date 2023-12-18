@@ -135,3 +135,17 @@ app.get("/user/following/", async (request, response) => {
   const names = await db.all(getFollowingNamesQuery);
   console.log(names);
 });
+
+//get request
+app.get("/user/followers/", async (request, response) => {
+  //   const { userName } = request.body;
+  const userName = "bhanu111";
+  const getUserQuery = `select user_id from user where username=${userName}`;
+  const getUserID = await db.get(getUserQuery);
+  const getFollowingNamesQuery = `select name 
+  from user join follower 
+  on user.user_id=follower.follower_id 
+  where user_id=${getUserID}`;
+  const names = await db.all(getFollowingNamesQuery);
+  console.log(names);
+});
